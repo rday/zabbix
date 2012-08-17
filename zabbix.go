@@ -40,7 +40,6 @@ func (z *ZabbixError) Error() string {
 type ZabbixHost map[string]interface{}
 type ZabbixGraph map[string]interface{}
 type ZabbixGraphItem map[string]interface{}
-type ZabbixHistoryItem map[string]interface{}
 type ZabbixHistoryItem struct {
 	Clock  string `json:"clock"`
 	Value  string `json:"value"`
