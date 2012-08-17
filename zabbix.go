@@ -1,36 +1,36 @@
 package zabbix
 
 import (
-	"net/http"
+	"bytes"
 	"encoding/json"
 	"fmt"
-	"bytes"
 	"io"
+	"net/http"
 )
 
 /**
- Zabbix and Go's RPC implementations don't play with each other.. at all.
- So I've re-created the wheel at bit.
+Zabbix and Go's RPC implementations don't play with each other.. at all.
+So I've re-created the wheel at bit.
 */
 type JsonRPCResponse struct {
-	Jsonrpc string	`json:"jsonrpc"`
-	Error ZabbixError `json:"error"`
-	Result interface{} `json:"result"`
-	Id int `json:"id"`
+	Jsonrpc string      `json:"jsonrpc"`
+	Error   ZabbixError `json:"error"`
+	Result  interface{} `json:"result"`
+	Id      int         `json:"id"`
 }
 
 type JsonRPCRequest struct {
-	Jsonrpc string	`json:"jsonrpc"`
-	Method string	`json:"method"`
-	Params interface{} `json:"params"`
-	Auth string `json:"auth"`
-	Id int `json:"id"`
+	Jsonrpc string      `json:"jsonrpc"`
+	Method  string      `json:"method"`
+	Params  interface{} `json:"params"`
+	Auth    string      `json:"auth"`
+	Id      int         `json:"id"`
 }
 
 type ZabbixError struct {
-	Code int `json:"code"`
+	Code    int    `json:"code"`
 	Message string `json:"message"`
-	Data string `json:"data"`
+	Data    string `json:"data"`
 }
 
 func (z *ZabbixError) Error() string {
@@ -41,14 +41,19 @@ type ZabbixHost map[string]interface{}
 type ZabbixGraph map[string]interface{}
 type ZabbixGraphItem map[string]interface{}
 type ZabbixHistoryItem map[string]interface{}
+type ZabbixHistoryItem struct {
+	Clock  string `json:"clock"`
+	Value  string `json:"value"`
+	Itemid string `json:"itemid"`
+}
 
 type API struct {
 	server string
-	url string
-	user string
+	url    string
+	user   string
 	passwd string
-	id int
-	auth string
+	id     int
+	auth   string
 }
 
 func NewAPI(server, user, passwd string) (*API, error) {
@@ -56,8 +61,8 @@ func NewAPI(server, user, passwd string) (*API, error) {
 }
 
 /**
- Each request establishes its own connection to the server. This makes it easy
- to keep request/responses in order without doing any concurrency
+Each request establishes its own connection to the server. This makes it easy
+to keep request/responses in order without doing any concurrency
 */
 func (api *API) ZabbixRequest(method string, data interface{}) (JsonRPCResponse, error) {
 	// Setup our JSONRPC Request data
@@ -89,9 +94,9 @@ func (api *API) ZabbixRequest(method string, data interface{}) (JsonRPCResponse,
 	}
 
 	/**
-	 We can't rely on response.ContentLength because it will
-	 be set at -1 for large responses that are chunked. So
-	 we treat each API response as streamed data.
+	We can't rely on response.ContentLength because it will
+	be set at -1 for large responses that are chunked. So
+	we treat each API response as streamed data.
 	*/
 	var result JsonRPCResponse
 	var buf bytes.Buffer
@@ -102,7 +107,7 @@ func (api *API) ZabbixRequest(method string, data interface{}) (JsonRPCResponse,
 	}
 
 	json.Unmarshal(buf.Bytes(), &result)
-	
+
 	response.Body.Close()
 
 	return result, nil
@@ -141,10 +146,10 @@ func (api *API) Version() (string, error) {
 }
 
 /**
- Interface to the user.* calls
+Interface to the user.* calls
 */
 func (api *API) User(method string, data interface{}) ([]interface{}, error) {
-	response, err := api.ZabbixRequest("user." + method, data)
+	response, err := api.ZabbixRequest("user."+method, data)
 	if err != nil {
 		return nil, err
 	}
@@ -157,10 +162,10 @@ func (api *API) User(method string, data interface{}) ([]interface{}, error) {
 }
 
 /**
- Interface to the host.* calls
+Interface to the host.* calls
 */
 func (api *API) Host(method string, data interface{}) ([]ZabbixHost, error) {
-	response, err := api.ZabbixRequest("host." + method, data)
+	response, err := api.ZabbixRequest("host."+method, data)
 	if err != nil {
 		return nil, err
 	}
@@ -178,10 +183,10 @@ func (api *API) Host(method string, data interface{}) ([]ZabbixHost, error) {
 }
 
 /**
- Interface to the graph.* calls
+Interface to the graph.* calls
 */
 func (api *API) Graph(method string, data interface{}) ([]ZabbixGraph, error) {
-	response, err := api.ZabbixRequest("graph." + method, data)
+	response, err := api.ZabbixRequest("graph."+method, data)
 	if err != nil {
 		return nil, err
 	}
@@ -199,10 +204,10 @@ func (api *API) Graph(method string, data interface{}) ([]ZabbixGraph, error) {
 }
 
 /**
- Interface to the history.* calls
+Interface to the history.* calls
 */
 func (api *API) History(method string, data interface{}) ([]ZabbixHistoryItem, error) {
-	response, err := api.ZabbixRequest("history." + method, data)
+	response, err := api.ZabbixRequest("history."+method, data)
 	if err != nil {
 		return nil, err
 	}
