@@ -23,8 +23,11 @@ type JsonRPCRequest struct {
 	Jsonrpc string      `json:"jsonrpc"`
 	Method  string      `json:"method"`
 	Params  interface{} `json:"params"`
-	Auth    string      `json:"auth"`
-	Id      int         `json:"id"`
+
+	// Zabbix 2.0:
+	// The "user.login" method must be called without the "auth" parameter
+	Auth string `json:"auth,omitempty"`
+	Id   int    `json:"id"`
 }
 
 type ZabbixError struct {
@@ -47,7 +50,6 @@ type ZabbixHistoryItem struct {
 }
 
 type API struct {
-	server string
 	url    string
 	user   string
 	passwd string
@@ -56,19 +58,25 @@ type API struct {
 }
 
 func NewAPI(server, user, passwd string) (*API, error) {
-	return &API{server, "http://" + server + "/zabbix/api_jsonrpc.php", user, passwd, 0, ""}, nil
+	return &API{server, user, passwd, 0, ""}, nil
+}
+
+func (api *API) GetAuth() string {
+	return api.auth
 }
 
 /**
 Each request establishes its own connection to the server. This makes it easy
 to keep request/responses in order without doing any concurrency
 */
+
 func (api *API) ZabbixRequest(method string, data interface{}) (JsonRPCResponse, error) {
 	// Setup our JSONRPC Request data
 	id := api.id
 	api.id = api.id + 1
 	jsonobj := JsonRPCRequest{"2.0", method, data, api.auth, id}
 	encoded, err := json.Marshal(jsonobj)
+
 	if err != nil {
 		return JsonRPCResponse{}, err
 	}
@@ -117,7 +125,7 @@ func (api *API) Login() (bool, error) {
 	params["user"] = api.user
 	params["password"] = api.passwd
 
-	response, err := api.ZabbixRequest("user.authenticate", params)
+	response, err := api.ZabbixRequest("user.login", params)
 	if err != nil {
 		fmt.Printf("Error: %s\n", err)
 		return false, err
