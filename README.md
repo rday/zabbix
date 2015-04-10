@@ -1,7 +1,7 @@
 zabbix
 ======
 
-This Go library implements the Zabbix 1.8 API. The Zabbix API is a JSONRPC
+This Go library implements the Zabbix 2.0 API. The Zabbix API is a JSONRPC
 based API, although it is not compatable with Go's builtin JSONRPC libraries.
 So we implement that JSONRPC, and provide data types that mimic Zabbbix's
 return values.
@@ -11,14 +11,7 @@ Connecting to the API
 
 ```go
 func main() {
-    api, err := zabbix.NewAPI("zabbix.yourhost.net", "User", "Password")
-    if err != nil {
-        fmt.Println(err)
-        return
-    }
-
-    fmt.Println("Connected to API")
-    _, err = api.Login()
+    api, err := zabbix.NewAPI("http://zabbix.yourhost.net/api_jsonrpc.php", "User", "Password")
     if err != nil {
         fmt.Println(err)
         return
@@ -30,6 +23,13 @@ func main() {
     }
 
     fmt.Println(versionresult)
+
+    _, err = api.Login()
+    if err != nil {
+        fmt.Println(err)
+        return
+    }
+    fmt.Println("Connected to API")
 }
 ```
 
@@ -42,9 +42,7 @@ will return that Error. Then my wrapper function return a ZabbixError
 to the caller.
 
 ```go
-/**
-   Find and return a single host object by name
-*/
+// Find and return a single host object by name
 func GetHost(api *zabbix.API, host string) (zabbix.ZabbixHost, error) {
     params := make(map[string]interface{}, 0)
     filter := make(map[string]string, 0)
