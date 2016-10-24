@@ -55,10 +55,11 @@ type API struct {
 	passwd string
 	id     int
 	auth   string
+	Client *http.Client
 }
 
 func NewAPI(server, user, passwd string) (*API, error) {
-	return &API{server, user, passwd, 0, ""}, nil
+	return &API{server, user, passwd, 0, "", &http.Client{}}, nil
 }
 
 func (api *API) GetAuth() string {
@@ -82,7 +83,6 @@ func (api *API) ZabbixRequest(method string, data interface{}) (JsonRPCResponse,
 	}
 
 	// Setup our HTTP request
-	client := &http.Client{}
 	request, err := http.NewRequest("POST", api.url, bytes.NewBuffer(encoded))
 	if err != nil {
 		return JsonRPCResponse{}, err
@@ -95,7 +95,7 @@ func (api *API) ZabbixRequest(method string, data interface{}) (JsonRPCResponse,
 	}
 
 	// Execute the request
-	response, err := client.Do(request)
+	response, err := api.Client.Do(request)
 	if err != nil {
 		return JsonRPCResponse{}, err
 	}
