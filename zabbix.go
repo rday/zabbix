@@ -139,6 +139,20 @@ func (api *API) Login() (bool, error) {
 	return true, nil
 }
 
+func (api *API) Logout() (bool, error) {
+	emptyparams := make(map[string]string, 0)
+	response, err := api.ZabbixRequest("user.logout", emptyparams)
+	if err != nil {
+		return nil, err
+	}
+
+	if response.Error.Code != 0 {
+		return nil, &response.Error
+	}
+
+	return response.Result, nil
+}
+
 func (api *API) Version() (string, error) {
 	response, err := api.ZabbixRequest("APIInfo.version", make(map[string]string, 0))
 	if err != nil {
