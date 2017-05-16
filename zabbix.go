@@ -185,8 +185,7 @@ func (api *API) User(method string, data interface{}) ([]interface{}, error) {
 /**
 Interface to the host.* calls
 */
-//func (api *API) Host(method string, data interface{}) ([]ZabbixHost, error) {
-func (api *API) Host(method string, data interface{}) ([]interface{}, error) {
+func (api *API) Host(method string, data interface{}) ([]ZabbixHost, error) {
 	response, err := api.ZabbixRequest("host."+method, data)
 	if err != nil {
 		return nil, err
@@ -196,19 +195,12 @@ func (api *API) Host(method string, data interface{}) ([]interface{}, error) {
 		return nil, &response.Error
 	}
 
-	// debug
-	fmt.Printf("--debug--")
-	fmt.Printf("%+v\n",response)
-
 	// XXX uhg... there has got to be a better way to convert the response
 	// to the type I want to return
-/*
 	res, err := json.Marshal(response.Result)
 	var ret []ZabbixHost
 	err = json.Unmarshal(res, &ret)
 	return ret, nil
-*/
-	return response.Result.([]interface{}), nil
 }
 
 /**
